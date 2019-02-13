@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.login.LoginMapper">
+
+	<!-- 登陆账号验证 -->
+	<select id="getCheckLogin" parameterType="map" resultType="dianfan.entities.admin.Admin">
+		SELECT
+			ta.id,
+			ta.account,
+			ta.PASSWORD,
+			ta.role_id role_Id,
+			ta.company_id companyId,
+			mr.descption roleName
+		FROM
+			t_admin ta LEFT JOIN m_role mr ON ta.role_id = mr.id
+		WHERE
+			ta.account = #{account} AND ta.password = #{password} AND ta.entkbn = 0
+	</select>
+
+
+	
+	<!-- 获取管理员列表数量 -->
+	<select id="findAdminListCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_admin ad
+		LEFT JOIN m_role role ON ad.role_id = role.id
+		LEFT JOIN t_company co ON ad.company_id = co.id
+		WHERE
+			ad.entkbn = 0 AND role.role_id = '06'
+			<!-- 账号搜索 -->
+			<if test=' account != unll and account != "" '>
+				<bind name="account_" value=" '%'+ account +'%' "/>
+				and ad.account like #{account_}
+			</if>
+	</select>
+	
+	<!-- 获取管理员列表 -->
+	<select id="findAdminList" parameterType="map" resultType="dianfan.entities.admin.Admin">
+		SELECT
+			ad.id,
+			ad.account,
+			ad.role_id roleId,
+			ad.company_id companyId,
+			ad.create_time createTime,
+			role.descption roleName,
+			co.company_name companyName
+		FROM
+			t_admin ad
+		LEFT JOIN m_role role ON ad.role_id = role.id
+		LEFT JOIN t_company co ON ad.company_id = co.id
+		WHERE
+			ad.entkbn = 0 AND role.role_id = '06'
+			<!-- 账号搜索 -->
+			<if test=' account != unll and account != "" '>
+				<bind name="account_" value=" '%'+ account +'%' "/>
+				and ad.account like #{account_}
+			</if>
+		ORDER BY
+			ad.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+
+
+	<!-- 删除管理员 -->
+	<select id="delAdminPerson" parameterType="map" >
+		UPDATE t_admin SET entkbn = 9 , update_time = NOW(), update_by = #{userid} WHERE id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+		 	#{item}
+		</foreach>
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.company.AccountMapper">
+
+	<!-- 获取账号的数量 -->
+	<select id="findAccountCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_user_userinfo tuu
+		LEFT JOIN m_role mr ON mr.id = tuu.role_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id 
+		LEFT JOIN t_admin ta ON  ta.company_id = tc.id
+		WHERE tuu.entkbn = 0 
+		<if test=' telno != null and telno != ""  '>
+			<bind name="telno_" value="'%'+ telno +'%'"/>
+			AND tuu.telno like #{telno_}
+		</if>
+		<if test=' applyName != null and applyName != ""  '>
+			<bind name="applyName_" value="'%'+ applyName +'%'"/>
+			AND tuu.name like #{applyName_}
+		</if>
+		<if test=' companyName != null and companyName != ""  '>
+			<bind name="companyName_" value="'%'+ companyName +'%'"/>
+			AND tc.company_name like #{companyName_}
+		</if>
+		<if test=' flag != null and flag != ""  '>
+			AND tuu.apply_flag = #{flag}
+		</if>
+		<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+			AND tuu.create_time between #{starttime} and #{endtime}
+		</if>
+	</select>
+	
+	
+	<!-- 获取账号的列表 -->
+	<select id="findAccountList" parameterType="map" resultType="dianfan.entities.user.UserInfos">
+		SELECT
+			tuu.id id,
+			tuu.telno telno,
+			tuu.locked,
+			tuu.header_name headerName,
+			tuu.name userName,
+			tuu.apply_flag applyFlag,
+			tuu.apply_user_id applyUserId,
+			tuu.apply_date applyDate,
+			tuu.create_time createTime,
+			tuu.role_id roleId,
+			tuu.company_id companyId,
+			mr.descption roleName,
+			tc.company_name companyName,
+			ta.account applyUser
+		FROM
+			t_user_userinfo tuu
+		LEFT JOIN m_role mr ON mr.id = tuu.role_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id 
+		LEFT JOIN t_admin ta ON ta.company_id = tc.id
+		WHERE tuu.entkbn = 0 
+		<if test=' telno != null and telno != ""  '>
+			<bind name="telno_" value="'%'+ telno +'%'"/>
+			AND tuu.telno like #{telno_}
+		</if>
+		<if test=' applyName != null and applyName != ""  '>
+			<bind name="applyName_" value="'%'+ applyName +'%'"/>
+			AND tuu.name like #{applyName_}
+		</if>
+		<if test=' companyName != null and companyName != ""  '>
+			<bind name="companyName_" value="'%'+ companyName +'%'"/>
+			AND tc.company_name like #{companyName_}
+		</if>
+		<if test=' flag != null and flag != ""  '>
+			AND tuu.apply_flag = #{flag}
+		</if>
+		<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+			AND tuu.create_time between #{starttime} and #{endtime}
+		</if>
+		ORDER BY tuu.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	<!-- 审批状态 -->
+	<update id="editAccountFlag" parameterType="map">
+		UPDATE t_user_userinfo SET update_time = NOW(),update_by = #{userid}, apply_user_id = #{userid},apply_date= NOW(),apply_flag= #{flag} WHERE id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">#{item}</foreach>
+	</update>
+	
+	
+</mapper>

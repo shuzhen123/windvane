@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.records.TakeLookMapper">
+	
+	
+	<!-- 获取成交列表的总数  -->
+	<select id="findknockdownCount" parameterType="map" resultType="int" >
+		SELECT 
+			COUNT(*) 
+		FROM 
+			t_preparation tp LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id 
+		WHERE 
+		tl.take_look_user_id = #{userid} AND tp.status = '04' AND tp.entkbn = 0
+		<if test=' type != null and type != "" '>
+			AND tp.commission_status =#{type}
+		</if>
+	</select>
+	
+	<!-- 获取成交列表的总数(报备者) -->
+	<select id="findknockdownCountBb" parameterType="map" resultType="int">
+		SELECT 
+			COUNT(*) 
+		FROM 
+			t_preparation tp LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id 
+		WHERE 
+		tl.preparation_user_id = #{userid} AND tp.status = '04' AND tp.entkbn = 0
+		<if test=' type != null and type != "" '>
+			AND tp.commission_status =#{type}
+		</if>
+	</select>
+	
+	
+	
+	<!-- 报备详情表map -->
+	<resultMap type="dianfan.entities.user.Records" id="recordsInfol">
+		<id column="id" property="id"/>
+		<result column="telno" property="telno"/>
+		<result column="cus_name" property="cusName"/>
+		<result column="status" property="status"/>
+		<result column="estate_name" property="estateName"/>
+		<result column="userName" property="userName"/>
+		<result column="companyName" property="companyName"/>
+		<result column="createTime" property="createTime"/>
+		
+		<result column="commissionStatus" property="commissionStatus"/>
+		<result column="commissionDes" property="commissionDes"/>
+		<!-- 一对一关系 带看详情   -->
+		<association property="takeLook" javaType="dianfan.entities.user.TakeLook">
+			<id column="lid" property="id"/>
+			<result column="room_num" property="roomNum"/>
+			<result column="ts_date" property="tsDate"/>
+		</association>
+	</resultMap>
+	
+	<select id="findknockdownList" parameterType="map" resultMap="recordsInfol">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp.cus_name,
+			tp.commission_status commissionStatus,
+			tp.commission_des commissionDes,
+			tp. STATUS,
+			tp.create_time createTime,
+			tl.id lid,
+			tl.room_num,
+			tl.ts_date,
+			ei.estate_name,
+			tuu.name userName,
+			tc.company_name companyName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id
+		LEFT JOIN t_estate_info ei ON ei.id = tp.estate_id
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tp.preparation_user_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id
+		WHERE 
+			tl.take_look_user_id = #{userid} AND 
+			tp.entkbn = 0 
+			AND tp. STATUS = '04'
+			<if test=' type != null and type != "" '>
+				AND tp.commission_status =#{type}
+			</if>
+		ORDER BY tl.ts_date DESC
+		limit #{start},#{pageSize}
+	</select>
+	<!-- 报备者看到的成交列表 -->
+	<select id="findknockdownListBb" parameterType="map" resultMap="recordsInfol">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp.cus_name,
+			tp.commission_status commissionStatus,
+			tp.commission_des commissionDes,
+			tp.create_time createTime,
+			tp. STATUS,
+			tl.id lid,
+			tl.room_num,
+			tl.ts_date,
+			ei.estate_name,
+			tuu.name userName,
+			tc.company_name companyName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id
+		LEFT JOIN t_estate_info ei ON ei.id = tp.estate_id
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tp.preparation_user_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id
+		WHERE 
+			tl.preparation_user_id = #{userid} AND tp.entkbn = 0 AND tp. STATUS = '04'
+			<if test=' type != null and type != "" '>
+				AND tp.commission_status =#{type}
+			</if>
+		ORDER BY tl.ts_date DESC
+		limit #{start},#{pageSize}
+	</select>
+
+
+
+	<!-- 成交详情 -->
+	<resultMap type="dianfan.entities.user.Records" id="knockdownInfos">
+		<id column="id" property="id"/>
+		<result column="telno" property="telno"/>
+		<result column="cus_name" property="cusName"/>
+		<result column="intention_des" property="intentionDes"/>
+		<result column="estate_id" property="estateId"/>
+		<result column="estate_name" property="estateName"/>
+		<result column="userName" property="userName"/>
+		<result column="companyName" property="companyName"/>
+		<result column="createTime" property="createTime"/>
+		<result column="commissionStatus" property="commissionStatus"/>
+		<result column="commissionDes" property="commissionDes"/>
+		<!-- 一对一关系 带看详情   -->
+		<association property="takeLook" javaType="dianfan.entities.user.TakeLook">
+			<id column="lid" property="id"/>
+			<result column="room_num" property="roomNum"/>
+			<result column="ts_date" property="tsDate"/>
+			<result column="ts_des" property="tsDes"/>
+			<result column="specific_des" property="specificDes"/>
+			<result column="area" property="area"/>
+			<result column="total_money" property="totalMoney"/>
+			<result column="commission_money" property="commissionMoney"/>
+		</association>
+	</resultMap>
+	<select id="getAffirmKnockdownInfo" parameterType="map" resultMap="knockdownInfos">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp.cus_name,
+			tp.intention_des,
+			tp.create_time createTime,
+			tp.estate_id,
+			tp.commission_status commissionStatus,
+			tp.commission_des commissionDes,
+			tl.id lid,
+			tl.room_num,
+			tl.ts_date,
+			tl.ts_des,
+			tl.specific_des,
+			tl.area,
+			tl.total_money,
+			tl.commission_money,
+			ei.estate_name,
+			tuu.name userName,
+			tc.company_name companyName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id
+		LEFT JOIN t_estate_info ei ON ei.id = tp.estate_id
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tp.preparation_user_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id
+		WHERE tl.id = #{lookId}
+	</select>
+
+
+	<!-- 成交的时候，更新报备表中的信息，佣金状态和佣金描述非必填 -->
+	<update id="upPreparation" parameterType="map">
+		UPDATE 
+			t_preparation SET 
+		status = '04', 
+		intention_des = #{intentionDes},
+		estate_id = #{estateId}, 
+		update_time = NOW(), 
+		update_by = #{userid} 
+		<if test=' commissionStatus != null and commissionStatus != "" '>
+			, commission_status = #{commissionStatus}
+		</if>
+		<if test=' commissionDes != null and commissionDes != "" '>
+			, commission_des = #{commissionDes}
+		</if>
+		WHERE 
+			id = #{preparationId}
+	</update>
+
+	
+	
+</mapper>

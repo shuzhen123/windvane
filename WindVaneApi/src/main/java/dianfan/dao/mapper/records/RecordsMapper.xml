@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.records.RecordsMapper">
+	
+	<!-- 报备详情表map -->
+	<resultMap type="dianfan.entities.user.Records" id="recordsInfo">
+		<id column="id" property="id"/>
+		<result column="telno" property="telno"/>
+		<result column="cus_name" property="cusName"/>
+		<result column="preparation_user_id" property="preparationUserId"/>
+		<result column="intention_des" property="intentionDes"/>
+		<result column="estate_name" property="estateName"/>
+		<result column="appointment_date" property="appointmentDate"/>
+		<result column="appointment_time" property="appointmentTime"/>
+		<result column="userName" property="userName"/>
+		<result column="companyName" property="companyName"/>
+		<result column="createTime" property="createTime"/>
+		<!-- 一对一关系 带看详情   -->
+		<association property="takeLook" javaType="dianfan.entities.user.TakeLook">
+			<id column="lid" property="id"/>
+			<result column="take_look_time" property="takeLookTime"/>
+			<result column="room_num" property="roomNum"/>
+			<result column="specific_des" property="specificDes"/>
+			<result column="ts_des" property="tsDes"/>
+		</association>
+	</resultMap>
+	
+	<!-- 报备详情 -->
+	<select id="getRecordsInfotoRecordsid" parameterType="map" resultMap="recordsInfo">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp.cus_name,
+			tp.preparation_user_id,
+			tp.intention_des,
+			tp.appointment_date,
+			tp.appointment_time,
+			tp.create_time createTime,
+			tl.id lid,
+			tl.take_look_time,
+			tl.room_num,
+			tl.specific_des,
+			tl.ts_des,
+			ei.estate_name,
+			tuu.name userName,
+			tc.company_name companyName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id
+		LEFT JOIN t_estate_info ei ON ei.id = tp.estate_id
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tp.preparation_user_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id
+		WHERE
+			tp.id = #{recordsid}
+		AND tp.entkbn = 0
+	</select>
+	<!-- 获取带看详情 -->
+	<select id="getLookInfos" parameterType="map" resultMap="recordsInfo">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp.cus_name,
+			tp.preparation_user_id,
+			tp.intention_des,
+			tp.appointment_date,
+			tp.appointment_time,
+			tp.create_time createTime,
+			tl.id lid,
+			tl.take_look_time,
+			tl.room_num,
+			tl.specific_des,
+			tl.ts_des,
+			ei.estate_name,
+			tuu.name userName,
+			tc.company_name companyName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_take_look tl ON tl.preparation_id = tp.id
+		LEFT JOIN t_estate_info ei ON ei.id = tp.estate_id
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tp.preparation_user_id
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id
+		WHERE
+			tl.id = #{lookId}
+	</select>
+
+
+	<update id="editRecordsAll" parameterType="map">
+		UPDATE  t_preparation 
+		SET 
+				cus_name = #{name}, 
+				<if test=' telno != null and telno != "" '>
+					telno = #{telno}, 
+				</if>
+				appointment_date = NOW(), 
+				appointment_time = #{time},
+				intention_des = #{describe},
+				<if test=' tower != null and tower != "" '>
+					estate_id = #{tower} , 
+				</if>
+				update_time = NOW(),
+				update_by = #{userid} 
+		WHERE id = #{id}
+	</update>
+
+
+
+	
+	
+</mapper>

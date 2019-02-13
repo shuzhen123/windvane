@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.company.StationedMapper">
+	
+	<!-- 获取驻场人员数量 -->
+	<select id="findStationedCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_user_userinfo tuu
+		LEFT JOIN m_role mr ON tuu.role_id = mr.id
+		LEFT JOIN t_estate_info tes ON tuu.id = tes.user_info_id
+		WHERE
+			tuu.entkbn = 0
+		AND (mr.role_id = '04' OR mr.role_id = '01')
+		<if test=' telno != null and telno != ""  '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tuu.telno like #{telno_}
+		</if>
+		<if test=' company != null and company != ""  '>
+			<bind name="company_" value=" '%'+company+'%' "/>
+			AND tes.estate_name like #{company_}
+		</if>
+		<if test=' starttime != null and starttime != "" and endtime != null and endtime !="" '>
+			AND tuu.create_time between #{starttime} and #{endtime}
+		</if>
+	</select>
+	
+	<!-- 获取驻场人员列表 -->
+	<select id="findStationedList" parameterType="map" resultType="dianfan.entities.user.UserInfos">
+		SELECT
+			tuu.id id,
+			tuu.telno telno,
+			tuu.locked locked,
+			tuu.role_id roleId,
+			tuu.name userName,
+			tuu.company_id companyId,
+			tuu.create_time createTime,
+			mr.descption roleName,
+			tes.id estateId,
+			tes.estate_name estateName,
+			tc.company_name companyName
+		FROM
+			t_user_userinfo tuu
+		LEFT JOIN m_role mr ON tuu.role_id = mr.id
+		LEFT JOIN t_estate_info tes ON tuu.id = tes.user_info_id 
+		LEFT JOIN t_company tc ON tuu.company_id = tc.id
+		WHERE
+			tuu.entkbn = 0
+		AND (mr.role_id = '04' OR mr.role_id = '01')
+		<if test=' telno != null and telno != ""  '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tuu.telno like #{telno_}
+		</if>
+		<if test=' company != null and company != ""  '>
+			<bind name="company_" value=" '%'+company+'%' "/>
+			AND tes.estate_name like #{company_}
+		</if>
+		<if test=' starttime != null and starttime != "" and endtime != null and endtime !="" '>
+			AND tuu.create_time between #{starttime} and #{endtime}
+		</if>
+		ORDER BY tuu.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	<!-- 修改驻场账号 -->
+	<update id="editStationed" parameterType="map">
+		UPDATE t_user_userinfo SET 
+			<if test=' pwd != null and pwd != "" '>pwd = #{pwd},</if>
+			role_id = #{roleId}, update_time = NOW(), update_by = #{userid} , name = #{name} WHERE id = #{id}
+	</update>
+	
+	
+</mapper>

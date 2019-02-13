@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.company.CompanyMapper">
+	
+	<!-- 获取公司列表数量 -->
+	<select id="findCompanyCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_company tc LEFT JOIN t_admin ta ON tc.create_by = ta.id
+		WHERE
+			tc.entkbn = 0
+			<if test=' companyName != null and companyName != "" '>
+				<bind name="companyName_" value=" '%'+companyName+'%' "/>
+				AND tc.company_name like #{companyName_}
+			</if>
+			<if test=' headerName != null and headerName != "" '>
+				<bind name="headerName_" value=" '%'+headerName+'%' "/>
+				AND tc.header_name like #{headerName_}
+			</if>
+			<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+				AND tc.create_time between #{starttime} and #{endtime} 
+			</if>
+	</select>
+	
+	<!-- 获取公司列表 -->
+	<select id="findCompanyList" parameterType="map" resultType="dianfan.entities.other.Company">
+		SELECT
+			tc.id,
+			tc.company_name companyName,
+			tc.header_name headerName,
+			ta.account account,
+			tc.create_time createTime 
+		FROM
+			t_company tc LEFT JOIN t_admin ta ON tc.id = ta.company_id
+		WHERE
+			tc.entkbn = 0
+			<if test=' companyName != null and companyName != "" '>
+				<bind name="companyName_" value=" '%'+companyName+'%' "/>
+				AND tc.company_name like #{companyName_}
+			</if>
+			<if test=' headerName != null and headerName != "" '>
+				<bind name="headerName_" value=" '%'+headerName+'%' "/>
+				AND tc.header_name like #{headerName_}
+			</if>
+			<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+				AND tc.create_time between #{starttime} and #{endtime} 
+			</if>
+		ORDER BY tc.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	<!-- 删除公司信息 -->
+	<update id="delCompanyInfo" parameterType="map">
+		UPDATE t_company SET entkbn = 9 ,update_time = NOW() , update_by = #{userid} WHERE id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 删除公司下的账号信息 -->
+	<update id="delCompanyAccountInfo" parameterType="map">
+		UPDATE t_admin SET entkbn = 9 , update_time = NOW() , update_by = '' WHERE company_id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	
+	<!-- 修改公司下的账号信息 -->
+	<update id="editCompanyAccountInfo"  parameterType="map">
+		UPDATE t_admin SET 
+		<if test=' password != null and password != "" '>
+			password = #{password}, 
+		</if>
+		account = #{account}, update_time = NOW() , update_by = #{userid} WHERE company_id = #{id} 
+	
+	</update>
+	
+	
+</mapper>

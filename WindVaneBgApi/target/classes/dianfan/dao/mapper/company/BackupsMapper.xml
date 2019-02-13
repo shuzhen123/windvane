@@ -1,0 +1,586 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.company.BackupsMapper">
+	
+	<!-- 获取报备列表数量 -->
+	<select id="findBackupsCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON tp.id = ttl.preparation_id
+		LEFT JOIN t_user_userinfo tuur ON tei.user_info_id = tuur.id
+		WHERE
+			tp.entkbn = 0
+		<!-- 报备电话搜索 -->
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%' + telno + '%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' userName != null and userName != "" '>
+			<bind name="userName_" value=" '%' + userName + '%' "/>
+			AND tuu.name like #{userName_}
+		</if>
+		<!-- 客户姓名搜索 -->
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%' + cusName + '%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+		<!-- 审核状态搜索 -->
+		<if test=' applyFlag != null and applyFlag != "" '>
+			AND tp.apply_flag = #{applyFlag}
+		</if>
+		<!-- 佣金结算状态 -->
+		<if test=' commissionStatus != null and commissionStatus != "" '>
+			AND tp.commission_status = #{commissionStatus}
+		</if>
+		<!-- 报备状态搜索 -->
+		<if test=' status != null and status != "" '>
+			AND tp.status = #{status}
+		</if>
+		<!-- 公司搜索 -->
+		<if test=' companyId != null and companyId != "" '>
+			<bind name="companyId_" value=" '%' + companyId + '%' "/>
+			AND tcc.company_name like #{companyId_}
+		</if>
+		<!-- 楼盘搜索 -->
+		<if test=' towerId != null and towerId != "" '>
+			<bind name="towerId_" value=" '%' + towerId + '%' "/>
+			AND tei.estate_name like #{towerId_}
+		</if>
+		<!-- between -->
+		<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+			AND tp.create_time between #{starttime} and #{endtime}
+		</if>
+	</select>
+	
+	<!-- 获取报备列表 -->
+	<select id="findBackupsList" parameterType="map" resultType="dianfan.entities.user.Records">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp. STATUS,
+			tp.estate_id estateId,
+			tp.cus_name cusName,
+			tp.commission_status commissionStatus,
+			tp.commission_des commissionDes,
+			tp.create_time createTime,
+			tp.appointment_date appointmentDate,
+			tp.appointment_time appointmentTime,
+			tp.apply_flag applyFlag,
+			tp.intention_des intentionDes,
+			tei.estate_name estateName,
+			tuu.telno backupsId,
+			tuu. NAME userName,
+			tcc.company_name preparationCompany,
+			ttl.ts_date tsDate,
+			tuur.`name` acName,
+			tuur.telno acTelno
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON tp.id = ttl.preparation_id
+		LEFT JOIN t_user_userinfo tuur ON tei.user_info_id = tuur.id
+		WHERE
+			tp.entkbn = 0
+		<!-- 报备电话搜索 -->
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%' + telno + '%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' userName != null and userName != "" '>
+			<bind name="userName_" value=" '%' + userName + '%' "/>
+			AND tuu.name like #{userName_}
+		</if>
+		<!-- 佣金结算状态 -->
+		<if test=' commissionStatus != null and commissionStatus != "" '>
+			AND tp.commission_status = #{commissionStatus}
+		</if>
+		<!-- 客户姓名搜索 -->
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%' + cusName + '%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+		<!-- 审核状态搜索 -->
+		<if test=' applyFlag != null and applyFlag != "" '>
+			AND tp.apply_flag = #{applyFlag}
+		</if>
+		<!-- 报备状态搜索 -->
+		<if test=' status != null and status != "" '>
+			AND tp.status = #{status}
+		</if>
+		<!-- 公司搜索 -->
+		<if test=' companyId != null and companyId != "" '>
+			<bind name="companyId_" value=" '%' + companyId + '%' "/>
+			AND tcc.company_name like #{companyId_}
+		</if>
+		<!-- 楼盘搜索 -->
+		<if test=' towerId != null and towerId != "" '>
+			<bind name="towerId_" value=" '%' + towerId + '%' "/>
+			AND tei.estate_name like #{towerId_}
+		</if>
+		<!-- between -->
+		<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+			AND tp.create_time between #{starttime} and #{endtime}
+		</if>
+		ORDER BY
+			tp.create_time DESC
+		LIMIT #{start},#{pageSize}
+			
+	</select>
+	
+	<!-- 状态审批  批量，修改后不用了，暂存-->
+	<!-- <update id="updataBackupsApprove" parameterType="map" >
+		UPDATE t_preparation SET apply_flag = #{flag} , update_time = NOW(), update_by = #{userid} WHERE id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update> -->
+	
+	
+	
+	<!-- 报备详情 -->
+	<select id="getBackupsInfo" parameterType="map" resultType="dianfan.entities.user.RecordsInfo">
+		SELECT DISTINCT
+			tp.id id,
+			tp.telno telno,
+			tp.cus_name cusName,
+			tp.create_time createTime,
+			tp.preparation_user_id preparationUserId,
+			tuu.telno backupsId,
+			tcc.company_name preparationCompany,
+			tp.`status` STATUS,
+			tp.apply_flag applyFlag,
+			tp.appointment_date appointmentDate,
+			tp.appointment_time appointmentTime,
+			tp.intention_des intentionDes,
+			ttl.take_look_time takeLookTime,
+			ttl.room_num roomNum,
+			ttl.specific_des specificDes,
+			ttl.ts_des tsDes,
+			ttl.area area,
+			ttl.total_money totalMoney,
+			ttl.commission_money commissionMoney,
+			ttl.ts_date tsDate,
+			tp.estate_id estateId,
+			tei.estate_name estateName,
+			tei.des estateDes,
+			tei.address estateAddress,
+			tei.money estateMoney,
+			tei.commission_rate commissionRate
+		FROM
+			t_preparation tp
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_estate_info tei ON tei.id = tp.estate_id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON ttl.preparation_id = tp.id
+		WHERE
+			tp.entkbn = 0
+		AND tp.id = #{id}
+		
+	</select>
+	<!-- 按楼盘报备数据统计  -->
+	<select id="findStatisticsList" parameterType="map" resultType="dianfan.entities.other.ModleList" >
+		SELECT
+			estateid id,name,time, count(estateid) count
+		FROM
+			(
+				SELECT
+					tp.estate_id estateid,
+					tei.estate_name name,
+					DATE_FORMAT(tp.create_time, "%Y-%m-%d") time
+				FROM
+					t_preparation tp,
+					t_estate_info tei
+				WHERE
+					tp.estate_id = tei.id
+				AND tp.create_time BETWEEN #{starttime}
+				AND date_format(date_add(#{endtime}, interval 1 day), '%Y-%m-%d 00:00:00')
+				ORDER BY
+					tp.create_time DESC
+			) d
+		GROUP BY
+			d.estateid,
+			d.time
+	</select>
+	<!-- 按楼盘成交数据统计 -->
+	<select id="findStatisticsListCj" parameterType="map" resultType="dianfan.entities.other.ModleList">
+		SELECT
+			estateid id,name,time, count(estateid) count
+		FROM
+			(
+				SELECT
+					tp.estate_id estateid,
+					tei.estate_name name,
+					DATE_FORMAT(ttl.ts_date, "%Y-%m-%d") time
+				FROM
+					t_preparation tp,
+					t_estate_info tei,
+					t_take_look ttl
+				WHERE
+					tp.estate_id = tei.id
+				AND tp.`status` = '04'
+				AND tp.id = ttl.preparation_id
+				AND ttl.ts_date BETWEEN #{starttime}
+				AND date_format(date_add(#{endtime}, interval 1 day), '%Y-%m-%d 00:00:00')
+				ORDER BY
+					ttl.ts_date DESC
+			) d
+		GROUP BY
+			d.estateid,
+			d.time
+	</select>
+	
+	<select id="findStatisticsListGsBb" parameterType="map" resultType="dianfan.entities.other.ModleList">
+		SELECT
+			tcid id,
+			NAME,
+			time,
+			count(tcid) count
+		FROM
+			(
+				SELECT
+					tc.id tcid,
+					tc.company_name NAME,
+					DATE_FORMAT(tp.create_time, "%Y-%m-%d") time
+				FROM
+					t_preparation tp,
+					t_user_userinfo tuu,
+					t_company tc,
+					t_take_look ttl
+				WHERE
+					tp.preparation_user_id = tuu.id AND
+					tuu.company_id = tc.id
+				AND tp.create_time BETWEEN #{starttime}
+				AND date_format(
+					date_add(#{endtime}, INTERVAL 1 DAY),
+					'%Y-%m-%d 00:00:00'
+				)
+				AND tp.preparation_user_id = tuu.id
+				AND ttl.preparation_id = tp.id
+				ORDER BY
+					tp.create_time DESC
+			) d
+		GROUP BY
+			d.tcid,
+			d.time
+	</select>
+	<!-- 按公司成交数据统计 -->
+	<select id="findStatisticsListGsCj" parameterType="map" resultType="dianfan.entities.other.ModleList">
+		SELECT
+			tcid id,
+			NAME,
+			time,
+			count(tcid) count
+		FROM
+			(
+				SELECT
+					tc.id tcid,
+					tc.company_name NAME,
+					DATE_FORMAT(ttl.ts_date, "%Y-%m-%d") time
+				FROM
+					t_preparation tp,
+					t_user_userinfo tuu,
+					t_company tc,
+					t_take_look ttl
+				WHERE
+					tp.preparation_user_id = tuu.id AND
+					tuu.company_id = tc.id
+				AND ttl.ts_date BETWEEN #{starttime}
+				AND date_format(
+					date_add(#{endtime}, INTERVAL 1 DAY),
+					'%Y-%m-%d 00:00:00'
+				)
+				AND tp.preparation_user_id = tuu.id
+				AND ttl.preparation_id = tp.id
+				ORDER BY
+					ttl.ts_date DESC
+			) d
+		GROUP BY
+			d.tcid,
+			d.time
+	</select>
+	
+	
+	<!-- 对应楼盘当天报备1 -->
+	<select id="getBackupsListDataCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(tp.create_time) = to_days(#{time})
+		AND tei.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+	</select>
+	
+	<select id="getBackupsListData" parameterType="map" resultType="dianfan.entities.user.Records">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp. STATUS,
+			tp.estate_id estateId,
+			tp.cus_name cusName,
+			tp.create_time createTime,
+			tp.appointment_date appointmentDate,
+			tp.appointment_time appointmentTime,
+			tp.apply_flag applyFlag,
+			tp.intention_des intentionDes,
+			tei.estate_name estateName,
+			tuu.telno backupsId,
+			tcc.company_name preparationCompany,
+			tuu.name userName,
+			tuur.`name` acName,
+			tuur.telno acTelno
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_user_userinfo tuur ON tei.user_info_id = tuur.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(tp.create_time) = to_days(#{time})
+		AND tei.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+		ORDER BY tp.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	<!-- 对应楼盘当天成交 2-->
+	<select id="getBackupsListDataCountCj" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON ttl.preparation_id = tp.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(ttl.ts_date) = to_days(#{time})
+		AND tei.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+	</select>
+	
+	<select id="getBackupsListDataCj" parameterType="map" resultType="dianfan.entities.user.Records">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp. STATUS,
+			tp.estate_id estateId,
+			tp.cus_name cusName,
+			tp.create_time createTime,
+			tp.appointment_date appointmentDate,
+			tp.appointment_time appointmentTime,
+			tp.apply_flag applyFlag,
+			tp.intention_des intentionDes,
+			tei.estate_name estateName,
+			ttl.ts_date tsDate,
+			tuu.telno backupsId,
+			tcc.company_name preparationCompany,
+			tuu.name userName,
+			tuur.`name` acName,
+			tuur.telno acTelno
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON ttl.preparation_id = tp.id
+		LEFT JOIN t_user_userinfo tuur ON tei.user_info_id = tuur.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(ttl.ts_date) = to_days(#{time})
+		AND tei.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+		ORDER BY tp.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	
+	
+	
+	
+	<!-- 对应公司当天报备 3-->
+	<select id="getBackupsListDataCountGs" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(tp.create_time) = to_days(#{time})
+		AND tcc.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+	</select>
+	
+	<select id="getBackupsListDataGs" parameterType="map" resultType="dianfan.entities.user.Records">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp. STATUS,
+			tp.estate_id estateId,
+			tp.cus_name cusName,
+			tp.create_time createTime,
+			tp.appointment_date appointmentDate,
+			tp.appointment_time appointmentTime,
+			tp.apply_flag applyFlag,
+			tp.intention_des intentionDes,
+			tei.estate_name estateName,
+			tuu.telno backupsId,
+			tcc.company_name preparationCompany,
+			ttl.ts_date tsDate,
+			tuur.name acName,
+			tuur.telno acTelno,
+			tuu.name userName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON ttl.preparation_id = tp.id
+		LEFT JOIN t_user_userinfo tuur ON tei.user_info_id = tuur.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(tp.create_time) = to_days(#{time})
+		AND tcc.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+		ORDER BY tp.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	
+	
+	<!-- 对应公司当天成交 4-->
+	<select id="getBackupsListDataCountGsCj" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON ttl.preparation_id = tp.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(ttl.ts_date) = to_days(#{time})
+		AND tcc.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+	</select>
+	
+	<select id="getBackupsListDataGsCj" parameterType="map" resultType="dianfan.entities.user.Records">
+		SELECT
+			tp.id,
+			tp.telno,
+			tp. STATUS,
+			tp.estate_id estateId,
+			tp.cus_name cusName,
+			tp.create_time createTime,
+			tp.appointment_date appointmentDate,
+			tp.appointment_time appointmentTime,
+			tp.apply_flag applyFlag,
+			tp.intention_des intentionDes,
+			tei.estate_name estateName,
+			tuu.telno backupsId,
+			ttl.ts_date tsDate,
+			tcc.company_name preparationCompany,
+			ttl.ts_date tsDate,
+			tuur.name acName,
+			tuur.telno acTelno,
+			tuu.name userName
+		FROM
+			t_preparation tp
+		LEFT JOIN t_estate_info tei ON tp.estate_id = tei.id
+		LEFT JOIN t_user_userinfo tuu ON tp.preparation_user_id = tuu.id
+		LEFT JOIN t_company tcc ON tuu.company_id = tcc.id
+		LEFT JOIN t_take_look ttl ON ttl.preparation_id = tp.id
+		LEFT JOIN t_user_userinfo tuur ON tei.user_info_id = tuur.id
+		WHERE
+			tp.entkbn = 0
+		AND to_days(ttl.ts_date) = to_days(#{time})
+		AND tcc.id = #{id}
+		<if test=' telno != null and telno != "" '>
+			<bind name="telno_" value=" '%'+telno+'%' "/>
+			AND tp.telno like #{telno_}
+		</if>
+		<if test=' cusName != null and cusName != "" '>
+			<bind name="cusName_" value=" '%'+cusName+'%' "/>
+			AND tp.cus_name like #{cusName_}
+		</if>
+		ORDER BY tp.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>

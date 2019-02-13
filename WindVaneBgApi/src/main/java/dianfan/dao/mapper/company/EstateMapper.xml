@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dianfan.dao.mapper.company.EstateMapper">
+	
+	<!-- 获取楼盘数量 -->
+	<select id="findEstateCount" parameterType="map" resultType="int">
+		SELECT
+			count(*)
+		FROM
+			t_estate_info tei
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tei.user_info_id
+		WHERE
+			tei.entkbn = 0 
+			<if test=' estateName != null and estateName != "" '>
+				<bind name="estateName_" value=" '%'+estateName+'%' "/>
+				and tei.estate_name like #{estateName_}
+			</if>
+			<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+				and tei.create_time between #{starttime} and #{endtime}
+			</if>
+	</select>
+	<!-- 获取楼盘列表 -->
+	<select id="findEstateList" parameterType="map" resultType="dianfan.entities.other.EstateInfo">
+		SELECT
+			tei.id,
+			tei.estate_icon estateIcon,
+			tei.estate_banner estateBanner,
+			tei.estate_name estateName,
+			tei.des des,
+			tei.money money,
+			tei.user_info_id userInfoId,
+			tei.commission_rate commissionRate,
+			tei.create_time createTime,
+			tei.address,
+			IFNULL(tuu.telno, '暂无案场') userInfoName,
+			IFNULL(tuu. NAME, '暂无案场') userName
+		FROM
+			t_estate_info tei
+		LEFT JOIN t_user_userinfo tuu ON tuu.id = tei.user_info_id
+		WHERE
+			tei.entkbn = 0
+			<if test=' estateName != null and estateName != "" '>
+				<bind name="estateName_" value=" '%'+estateName+'%' "/>
+				AND tei.estate_name like #{estateName_}
+			</if>
+			<if test=' starttime != null and starttime != "" and endtime != null and endtime != "" '>
+				AND tei.create_time between #{starttime} and #{endtime}
+			</if>
+		ORDER BY tei.create_time DESC
+		LIMIT #{start},#{pageSize}
+	</select>
+
+	<!-- 删除楼盘 -->
+	<update id="delEstate" parameterType="map">
+		UPDATE t_estate_info SET entkbn = 9,user_info_id = null,update_time=NOW(),update_by=#{userid} WHERE id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">#{item}</foreach>
+	</update>
+
+</mapper>
